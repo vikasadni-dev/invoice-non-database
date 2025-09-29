@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
       .dark {
         background-color: #1f2937;
@@ -73,7 +74,6 @@
       </header>
 
       <div class="flex flex-col lg:flex-row gap-8">
-        <!-- Input Form -->
         <div class="w-full lg:w-1/2 bg-white rounded-lg shadow p-6 no-print">
           <h2 class="text-xl font-semibold mb-4 text-gray-800">Add Items</h2>
 
@@ -125,7 +125,6 @@
             Add Item to Invoice
           </button>
 
-          <!-- Input Biaya Admin -->
           <div class="mb-6">
             <label class="block text-gray-700 mb-2" for="adminFee"
               >Biaya Admin (Rp)</label
@@ -151,7 +150,7 @@
             />
           </div>
 
-          <div class="flex gap-4 justify-between">
+          <div class="flex gap-4 justify-between mb-4">
             <button
               id="generatePdfBtn"
               class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-200"
@@ -171,9 +170,14 @@
               Save to Cloud
             </button>
           </div>
-        </div>
+          <button
+            id="generateJpgBtn"
+            class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-md transition duration-200"
+          >
+            Download as Image (PNG)
+          </button>
+          </div>
 
-        <!-- Invoice Preview -->
         <div class="w-full lg:w-1/2">
           <div class="bg-white rounded-lg shadow p-6 mb-4 receipt-container">
             <div id="receiptContent">
@@ -196,7 +200,7 @@
                       <input
                         type="text"
                         id="businessName"
-                        value="Toko Vika Digital Printing"
+                        value="Toko Vika Sadni"
                         class="px-1 border rounded bg-transparent"
                       />
                     </div>
@@ -220,7 +224,6 @@
                     </tr>
                   </thead>
                   <tbody id="invoiceItems">
-                    <!-- Items will be added here -->
                     <tr>
                       <td colspan="5" class="py-4 text-center text-gray-500">
                         No items added yet
@@ -239,7 +242,6 @@
                         <span id="subtotal">0</span>
                       </td>
                     </tr>
-                    <!-- Baris Biaya Admin -->
                     <tr>
                       <td
                         colspan="4"
@@ -284,4 +286,3 @@
     <script src="script.js"></script>
   </body>
 </html>
-

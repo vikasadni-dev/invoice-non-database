@@ -1,28 +1,32 @@
-        // Initialize jsPDF
+// Initialize jsPDF
         const { jsPDF } = window.jspdf;
         
-// DOM Elements
+        // DOM Elements
         const itemNameInput = document.getElementById('itemName');
         const itemQuantityInput = document.getElementById('itemQuantity');
         const itemPriceInput = document.getElementById('itemPrice');
         const addItemBtn = document.getElementById('addItemBtn');
         const invoiceItems = document.getElementById('invoiceItems');
         const subtotalElement = document.getElementById('subtotal');
-        // const taxElement = document.getElementById('tax'); // Elemen ini tidak ada di HTML Anda
+        // const taxElement = document.getElementById('tax'); // Dihapus karena tidak digunakan
         const totalElement = document.getElementById('total');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const printBtn = document.getElementById('printBtn');
         const saveCloudBtn = document.getElementById('saveCloudBtn');
+        // START: Tambahan untuk Gambar/JPG
+        const generateJpgBtn = document.getElementById('generateJpgBtn');
+        const receiptContent = document.getElementById('receiptContent');
+        // END: Tambahan untuk Gambar/JPG
         const customerNameInput = document.getElementById('customerName');
         const displayCustomerName = document.getElementById('displayCustomerName');
         const invoiceDate = document.getElementById('invoiceDate');
         const invoiceNumber = document.getElementById('invoiceNumber');
         const savedInvoices = document.getElementById('savedInvoices');
         
-        // **START: Tambahan untuk Biaya Admin**
+        // START: Tambahan untuk Biaya Admin
         const adminFeeInput = document.getElementById('adminFee');
         const adminFeeDisplay = document.getElementById('adminFeeDisplay');
-        // **END: Tambahan untuk Biaya Admin**
+        // END: Tambahan untuk Biaya Admin
 
         // Variables
         let items = [];
@@ -50,10 +54,12 @@
         printBtn.addEventListener('click', printInvoice);
         saveCloudBtn.addEventListener('click', saveToCloud);
         customerNameInput.addEventListener('input', updateCustomerName);
-        
-        // **START: Tambahan Biaya Admin Event**
+        // START: Tambahan Biaya Admin Event
         adminFeeInput.addEventListener('input', calculateTotals);
-        // **END: Tambahan Biaya Admin Event**
+        // END: Tambahan Biaya Admin Event
+        // START: Tambahan Gambar/JPG Event
+        generateJpgBtn.addEventListener('click', generateJpg);
+        // END: Tambahan Gambar/JPG Event
 
         // Functions
         function updateInvoiceDate() {
@@ -151,17 +157,17 @@
             calculateTotals();
         }
 
-function calculateTotals() {
+        function calculateTotals() {
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
             
-            // **START: Perhitungan Biaya Admin**
+            // START: Perhitungan Biaya Admin
             const adminFee = parseInt(adminFeeInput.value) || 0;
-            const total = subtotal + adminFee; // Total sekarang hanya Subtotal + Biaya Admin
+            const total = subtotal + adminFee;
             
             subtotalElement.textContent = formatCurrency(subtotal);
             adminFeeDisplay.textContent = formatCurrency(adminFee); // Menampilkan Biaya Admin
             totalElement.textContent = formatCurrency(total);
-            // **END: Perhitungan Biaya Admin**
+            // END: Perhitungan Biaya Admin
         }
 
         function formatCurrency(amount) {
@@ -176,7 +182,6 @@ function calculateTotals() {
 
             const doc = new jsPDF();
             
-            // ... (Kode untuk Title dan Invoice Info tetap sama) ...
             // Add title
             doc.setFontSize(20);
             doc.text('INVOICE', 105, 20, { align: 'center' });
@@ -201,7 +206,7 @@ function calculateTotals() {
             
             // Calculate totals
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-            // **START: Perubahan PDF Biaya Admin**
+            // START: Perubahan PDF Biaya Admin
             const adminFee = parseInt(adminFeeInput.value) || 0; 
             const total = subtotal + adminFee;
             
@@ -209,7 +214,7 @@ function calculateTotals() {
             rows.push(["", "", "", "Subtotal:", formatCurrency(subtotal)]);
             rows.push(["", "", "", "Biaya Admin:", formatCurrency(adminFee)]); // Tambah baris Biaya Admin
             rows.push(["", "", "", "Total:", formatCurrency(total)]);
-            // **END: Perubahan PDF Biaya Admin**
+            // END: Perubahan PDF Biaya Admin
             
             // Add the table
             doc.autoTable({
@@ -239,6 +244,35 @@ function calculateTotals() {
             doc.save(`invoice-${invoiceCounter}.pdf`);
         }
 
+        // Fungsi untuk mengkonversi faktur HTML ke gambar (PNG)
+        function generateJpg() {
+            if (items.length === 0) {
+                alert('Please add at least one item to generate the invoice image');
+                return;
+            }
+
+            // Gunakan html2canvas pada area faktur
+            html2canvas(receiptContent, { 
+                scale: 2, // Meningkatkan kualitas gambar
+                useCORS: true 
+            }).then(canvas => {
+                // Konversi canvas menjadi data URL (PNG)
+                const image = canvas.toDataURL('image/png');
+                
+                // Buat elemen <a> sementara untuk trigger download
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = `invoice-${invoiceCounter}.png`; // Ubah menjadi PNG
+                
+                // Tambahkan dan klik link, lalu hapus
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                alert('Invoice image downloaded successfully!');
+            });
+        }
+
         function printInvoice() {
             window.print();
         }
@@ -252,12 +286,12 @@ function calculateTotals() {
             const customerName = customerNameInput.value || 'Customer Name';
             const date = new Date().toLocaleDateString();
             
-            // **START: Perubahan Save To Cloud Biaya Admin**
+            // START: Perubahan Save To Cloud Biaya Admin
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
             const adminFee = parseInt(adminFeeInput.value) || 0;
-            const total = subtotal + adminFee; // Total sekarang Subtotal + Biaya Admin
-            // **END: Perubahan Save To Cloud Biaya Admin**
-
+            const total = subtotal + adminFee;
+            // END: Perubahan Save To Cloud Biaya Admin
+            
             const invoiceData = {
                 id: Date.now(),
                 number: invoiceCounter,
@@ -281,9 +315,9 @@ function calculateTotals() {
             // Clear current invoice and admin fee input
             items = [];
             renderItems();
-            // **START: Clear Biaya Admin**
+            // START: Clear Biaya Admin
             adminFeeInput.value = '';
-            // **END: Clear Biaya Admin**
+            // END: Clear Biaya Admin
             calculateTotals();
             customerNameInput.value = '';
             displayCustomerName.textContent = 'Customer Name';
@@ -321,6 +355,7 @@ function calculateTotals() {
                     <div class="mt-2 flex gap-2">
                         <button data-id="${invoice.id}" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition duration-200 view-btn">View</button>
                         <button data-id="${invoice.id}" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition duration-200 download-btn">PDF</button>
+                        <button data-id="${invoice.id}" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition duration-200 image-btn">Image</button>
                         <button data-id="${invoice.id}" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition duration-200 delete-btn">Delete</button>
                     </div>
                 `;
@@ -341,6 +376,15 @@ function calculateTotals() {
                     downloadSavedInvoice(id);
                 });
             });
+            
+            // START: Tambahan Download Gambar Saved Invoice
+            document.querySelectorAll('.image-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    downloadSavedInvoiceImage(id);
+                });
+            });
+            // END: Tambahan Download Gambar Saved Invoice
             
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -363,6 +407,8 @@ function calculateTotals() {
             items = invoice.items;
             customerNameInput.value = invoice.customerName;
             displayCustomerName.textContent = invoice.customerName;
+            // Set Biaya Admin
+            adminFeeInput.value = invoice.adminFee || 0;
             
             renderItems();
             calculateTotals();
@@ -406,14 +452,14 @@ function calculateTotals() {
             
             // Add summary rows
             const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
-            // **START: Perubahan Download PDF Biaya Admin**
+            // START: Perubahan Download PDF Biaya Admin
             const adminFee = invoice.adminFee || 0; // Ambil biaya admin yang tersimpan
             const total = subtotal + adminFee;
             
             rows.push(["", "", "", "Subtotal:", formatCurrency(subtotal)]);
             rows.push(["", "", "", "Biaya Admin:", formatCurrency(adminFee)]); // Tambah baris Biaya Admin
             rows.push(["", "", "", "Total:", formatCurrency(total)]);
-            // **END: Perubahan Download PDF Biaya Admin**
+            // END: Perubahan Download PDF Biaya Admin
             
             // Add the table
             doc.autoTable({
@@ -434,6 +480,62 @@ function calculateTotals() {
             // Save the PDF
             doc.save(`invoice-${invoice.number}.pdf`);
         }
+
+        // START: Fungsi Download Gambar Saved Invoice
+        function downloadSavedInvoiceImage(id) {
+            const saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
+            const invoice = saved.find(i => i.id === id);
+            
+            if (!invoice) {
+                alert('Invoice not found');
+                return;
+            }
+            
+            // Simpan state faktur saat ini
+            const currentItems = [...items];
+            const currentCustomerName = customerNameInput.value;
+            const originalAdminFee = adminFeeInput.value;
+
+
+            // Load faktur yang disimpan ke DOM sementara
+            items = invoice.items;
+            customerNameInput.value = invoice.customerName;
+            displayCustomerName.textContent = invoice.customerName;
+            adminFeeInput.value = invoice.adminFee || 0; 
+            
+            renderItems();
+            calculateTotals();
+            
+            // Konversi ke gambar
+            html2canvas(receiptContent, { 
+                scale: 2, 
+                useCORS: true 
+            }).then(canvas => {
+                const image = canvas.toDataURL('image/png');
+                
+                // Reset state DOM ke faktur yang sedang diedit (jika ada)
+                items = currentItems;
+                customerNameInput.value = currentCustomerName;
+                displayCustomerName.textContent = currentCustomerName || 'Customer Name';
+                adminFeeInput.value = originalAdminFee;
+
+                renderItems();
+                calculateTotals();
+
+                // Trigger download
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = `invoice-${invoice.number}.png`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                alert('Saved invoice image downloaded successfully!');
+            });
+        }
+        // END: Fungsi Download Gambar Saved Invoice
+
 
         function deleteSavedInvoice(id) {
             if (!confirm('Are you sure you want to delete this invoice?')) {
