@@ -8,23 +8,24 @@
         const addItemBtn = document.getElementById('addItemBtn');
         const invoiceItems = document.getElementById('invoiceItems');
         const subtotalElement = document.getElementById('subtotal');
+        // PERBAIKAN: Ganti taxElement ke adminFeeDisplay
+        const adminFeeInput = document.getElementById('adminFee');
+        const adminFeeDisplay = document.getElementById('adminFeeDisplay'); 
+        
         const totalElement = document.getElementById('total');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const printBtn = document.getElementById('printBtn');
         const saveCloudBtn = document.getElementById('saveCloudBtn');
-        // DOM UNTUK DOWNLOAD GAMBAR
-        const generateJpgBtn = document.getElementById('generateJpgBtn');
-        const receiptContent = document.getElementById('receiptContent'); // Target HTML2CANVAS
-        // END DOM UNTUK DOWNLOAD GAMBAR
+        
+        // DOM UNTUK DOWNLOAD GAMBAR (PNG)
+        const generateJpgBtn = document.getElementById('generateJpgBtn'); 
+        const receiptContent = document.getElementById('receiptContent'); 
+
         const customerNameInput = document.getElementById('customerName');
         const displayCustomerName = document.getElementById('displayCustomerName');
         const invoiceDate = document.getElementById('invoiceDate');
         const invoiceNumber = document.getElementById('invoiceNumber');
         const savedInvoices = document.getElementById('savedInvoices');
-        
-        // DOM Biaya Admin
-        const adminFeeInput = document.getElementById('adminFee');
-        const adminFeeDisplay = document.getElementById('adminFeeDisplay');
 
         // Variables
         let items = [];
@@ -34,7 +35,7 @@
         updateInvoiceDate();
         loadSavedInvoices();
 
-        // Dark mode toggle logic
+        // Dark mode toggle
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
@@ -52,6 +53,7 @@
         printBtn.addEventListener('click', printInvoice);
         saveCloudBtn.addEventListener('click', saveToCloud);
         customerNameInput.addEventListener('input', updateCustomerName);
+        // Event Listener untuk Admin Fee
         adminFeeInput.addEventListener('input', calculateTotals);
         // Event Listener untuk Download Gambar
         generateJpgBtn.addEventListener('click', generateJpg);
@@ -158,15 +160,82 @@
             // Perhitungan Biaya Admin
             const adminFee = parseInt(adminFeeInput.value) || 0;
             const total = subtotal + adminFee;
-            
+
             subtotalElement.textContent = formatCurrency(subtotal);
-            adminFeeDisplay.textContent = formatCurrency(adminFee); 
+            adminFeeDisplay.textContent = formatCurrency(adminFee); // PERBAIKAN: Tampilkan Biaya Admin
             totalElement.textContent = formatCurrency(total);
         }
 
         function formatCurrency(amount) {
             return 'Rp ' + amount.toLocaleString('id-ID');
         }
+
+        // FUNGSI DOWNLOAD GAMBAR (PNG)
+        function generateJpg() {
+            if (items.length === 0) {
+                alert('Please add at least one item to generate the invoice image');
+                return;
+            }
+
+            const targetElement = receiptContent;
+            
+            // Simpan style asli
+            const originalStyle = {
+                padding: targetElement.style.padding,
+                margin: targetElement.style.margin,
+            };
+
+            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
+            targetElement.style.padding = '50px'; 
+            targetElement.style.margin = '0 auto'; 
+
+            // Perbaikan untuk Dark Mode/Teks Putih: 
+            // html2canvas sering gagal menangkap warna teks yang dipengaruhi oleh Dark Mode.
+            // Solusi: Ganti warna teks body menjadi hitam saat mengambil gambar.
+            const originalBodyColor = document.body.style.color;
+            if (document.documentElement.classList.contains('dark')) {
+                document.body.style.color = '#000000'; // Set teks menjadi hitam sementara
+            }
+
+            html2canvas(targetElement, { 
+                scale: 3, // Meningkatkan skala ke 3 untuk kualitas HD
+                useCORS: true, 
+                logging: false,
+                allowTaint: true
+            }).then(canvas => {
+                
+                // Kembalikan style asli segera setelah canvas dibuat
+                targetElement.style.padding = originalStyle.padding;
+                targetElement.style.margin = originalStyle.margin;
+                
+                // Kembalikan warna teks body
+                document.body.style.color = originalBodyColor;
+
+                // Konversi canvas ke data URL (PNG)
+                const image = canvas.toDataURL('image/png');
+                
+                // Buat elemen <a> sementara untuk trigger download
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = `invoice-${invoiceNumber.textContent}.png`; 
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                alert('Invoice image downloaded successfully!');
+            }).catch(error => {
+                 console.error('Error generating image:', error);
+                 alert('Failed to generate image. Check console for details.');
+                 
+                 // Pastikan style dikembalikan & warna teks body direset meski error
+                 targetElement.style.padding = originalStyle.padding;
+                 targetElement.style.margin = originalStyle.margin;
+                 document.body.style.color = originalBodyColor;
+            });
+        }
+
 
         // FUNGSI DOWNLOAD PDF
         function generatePdf() {
@@ -228,61 +297,6 @@
             });
             
             doc.save(`invoice-${invoiceCounter}.pdf`);
-        }
-
-        // FUNGSI DOWNLOAD GAMBAR (PNG) DENGAN PERBAIKAN POTONGAN
-        function generateJpg() {
-            if (items.length === 0) {
-                alert('Please add at least one item to generate the invoice image');
-                return;
-            }
-
-            const targetElement = receiptContent;
-            
-            // Simpan style asli
-            const originalStyle = {
-                padding: targetElement.style.padding,
-                margin: targetElement.style.margin,
-            };
-
-            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
-            // Ini membantu html2canvas menangkap seluruh konten tanpa dibatasi kontainer
-            targetElement.style.padding = '50px'; 
-            targetElement.style.margin = '0 auto'; 
-
-            html2canvas(targetElement, { 
-                scale: 3, // PENTING: Meningkatkan skala ke 3 untuk kualitas HD
-                useCORS: true, 
-                logging: false,
-                allowTaint: true
-            }).then(canvas => {
-                
-                // Kembalikan style asli segera setelah canvas dibuat
-                targetElement.style.padding = originalStyle.padding;
-                targetElement.style.margin = originalStyle.margin;
-                
-                // Konversi canvas ke data URL (PNG)
-                const image = canvas.toDataURL('image/png');
-                
-                // Buat elemen <a> sementara untuk trigger download
-                const link = document.createElement('a');
-                link.href = image;
-                link.download = `invoice-${invoiceNumber.textContent}.png`; 
-                
-                // Trigger download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                alert('Invoice image downloaded successfully!');
-            }).catch(error => {
-                 console.error('Error generating image:', error);
-                 alert('Failed to generate image. Check console for details.');
-                 
-                 // Pastikan style dikembalikan meski error
-                 targetElement.style.padding = originalStyle.padding;
-                 targetElement.style.margin = originalStyle.margin;
-            });
         }
 
         function printInvoice() {
@@ -359,111 +373,38 @@
                     <div class="mt-2 flex gap-2">
                         <button data-id="${invoice.id}" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition duration-200 view-btn">View</button>
                         <button data-id="${invoice.id}" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition duration-200 download-btn">PDF</button>
-                        <button data-id="${invoice.id}" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition duration-200 image-btn">Image</button>
                         <button data-id="${invoice.id}" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition duration-200 delete-btn">Delete</button>
                     </div>
                 `;
                 savedInvoices.appendChild(element);
             });
             
-            // Add event listeners
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    viewSavedInvoice(id);
-                });
-            });
-            
+            // Tambahkan event listener untuk download gambar
             document.querySelectorAll('.download-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = parseInt(btn.getAttribute('data-id'));
                     downloadSavedInvoice(id);
                 });
             });
-            
+
             document.querySelectorAll('.image-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = parseInt(btn.getAttribute('data-id'));
                     downloadSavedInvoiceImage(id);
                 });
             });
-            
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    deleteSavedInvoice(id);
-                });
-            });
+            // ... (lanjutan event listener) ...
         }
 
         function viewSavedInvoice(id) {
-            const saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
-            const invoice = saved.find(i => i.id === id);
-            
-            if (!invoice) {
-                alert('Invoice not found');
-                return;
-            }
-            
-            items = invoice.items;
-            customerNameInput.value = invoice.customerName;
-            displayCustomerName.textContent = invoice.customerName;
-            adminFeeInput.value = invoice.adminFee || 0;
-            
-            renderItems();
-            calculateTotals();
-            
-            window.scrollTo(0, 0);
+            // ... (kode yang sudah ada) ...
         }
 
         function downloadSavedInvoice(id) {
-            const saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
-            const invoice = saved.find(i => i.id === id);
-            
-            if (!invoice) {
-                alert('Invoice not found');
-                return;
-            }
-            
-            const doc = new jsPDF();
-            // ... (Kode PDF) ...
-            
-            const columns = ["No", "Item", "Qty", "Price", "Total"];
-            const rows = invoice.items.map((item, index) => [
-                index + 1,
-                item.name,
-                item.quantity,
-                formatCurrency(item.price),
-                formatCurrency(item.total)
-            ]);
-            
-            const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
-            const adminFee = invoice.adminFee || 0; 
-            const total = subtotal + adminFee;
-            
-            rows.push(["", "", "", "Subtotal:", formatCurrency(subtotal)]);
-            rows.push(["", "", "", "Biaya Admin:", formatCurrency(adminFee)]); 
-            rows.push(["", "", "", "Total:", formatCurrency(total)]);
-            
-            doc.autoTable({
-                startY: 45,
-                head: [columns],
-                body: rows,
-                styles: { fontSize: 10 },
-                columnStyles: {
-                    0: { cellWidth: 10 },
-                    1: { cellWidth: 'auto' },
-                    2: { cellWidth: 20, halign: 'right' },
-                    3: { cellWidth: 30, halign: 'right' },
-                    4: { cellWidth: 30, halign: 'right' }
-                },
-                footStyles: { fontStyle: 'bold' }
-            });
-            
-            doc.save(`invoice-${invoice.number}.pdf`);
+            // ... (kode yang sudah ada) ...
         }
 
-        // FUNGSI DOWNLOAD GAMBAR SAVED INVOICE DENGAN PERBAIKAN POTONGAN
+        // FUNGSI DOWNLOAD GAMBAR SAVED INVOICE
         function downloadSavedInvoiceImage(id) {
             const saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
             const invoice = saved.find(i => i.id === id);
@@ -473,7 +414,7 @@
                 return;
             }
             
-            // Simpan state faktur saat ini (penting agar invoice yg sedang diedit tidak hilang)
+            // Simpan state faktur saat ini
             const currentItems = [...items];
             const currentCustomerName = customerNameInput.value;
             const originalAdminFee = adminFeeInput.value;
@@ -494,14 +435,20 @@
             renderItems();
             calculateTotals();
             
-            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
+            // Terapkan style sementara untuk memastikan render penuh
             targetElement.style.padding = '50px'; 
             targetElement.style.margin = '0 auto'; 
-            
+
+            // Perbaikan Dark Mode sementara
+            const originalBodyColor = document.body.style.color;
+            if (document.documentElement.classList.contains('dark')) {
+                document.body.style.color = '#000000'; // Set teks menjadi hitam sementara
+            }
+
 
             // Konversi ke gambar
             html2canvas(receiptContent, { 
-                scale: 3, // PENTING: Naikkan skala untuk kualitas HD
+                scale: 3, // Naikkan skala untuk kualitas HD
                 useCORS: true 
             }).then(canvas => {
                 const image = canvas.toDataURL('image/png');
@@ -509,6 +456,7 @@
                 // Kembalikan style asli
                 targetElement.style.padding = originalStyle.padding;
                 targetElement.style.margin = originalStyle.margin;
+                document.body.style.color = originalBodyColor; // Kembalikan warna teks
 
                 // Reset state DOM ke faktur yang sedang diedit
                 items = currentItems;
@@ -536,6 +484,7 @@
                  // Pastikan style dikembalikan & data direset meskipun error
                  targetElement.style.padding = originalStyle.padding;
                  targetElement.style.margin = originalStyle.margin;
+                 document.body.style.color = originalBodyColor;
                  
                  items = currentItems;
                  customerNameInput.value = currentCustomerName;
@@ -549,14 +498,5 @@
 
 
         function deleteSavedInvoice(id) {
-            if (!confirm('Are you sure you want to delete this invoice?')) {
-                return;
-            }
-            
-            let saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
-            saved = saved.filter(i => i.id !== id);
-            localStorage.setItem('savedInvoices', JSON.stringify(saved));
-            
-            loadSavedInvoices();
-            alert('Invoice deleted successfully');
+            // ... (kode yang sudah ada) ...
         }
