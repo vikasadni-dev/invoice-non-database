@@ -230,18 +230,37 @@
             doc.save(`invoice-${invoiceCounter}.pdf`);
         }
 
-        // FUNGSI DOWNLOAD GAMBAR (PNG)
+        // FUNGSI DOWNLOAD GAMBAR (PNG) DENGAN PERBAIKAN POTONGAN
         function generateJpg() {
             if (items.length === 0) {
                 alert('Please add at least one item to generate the invoice image');
                 return;
             }
 
-            // Gunakan html2canvas pada elemen receiptContent
-            html2canvas(receiptContent, { 
-                scale: 2, // Kualitas ditingkatkan
-                useCORS: true // Membantu memuat gambar eksternal (jika ada)
+            const targetElement = receiptContent;
+            
+            // Simpan style asli
+            const originalStyle = {
+                padding: targetElement.style.padding,
+                margin: targetElement.style.margin,
+            };
+
+            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
+            // Ini membantu html2canvas menangkap seluruh konten tanpa dibatasi kontainer
+            targetElement.style.padding = '50px'; 
+            targetElement.style.margin = '0 auto'; 
+
+            html2canvas(targetElement, { 
+                scale: 3, // PENTING: Meningkatkan skala ke 3 untuk kualitas HD
+                useCORS: true, 
+                logging: false,
+                allowTaint: true
             }).then(canvas => {
+                
+                // Kembalikan style asli segera setelah canvas dibuat
+                targetElement.style.padding = originalStyle.padding;
+                targetElement.style.margin = originalStyle.margin;
+                
                 // Konversi canvas ke data URL (PNG)
                 const image = canvas.toDataURL('image/png');
                 
@@ -259,6 +278,10 @@
             }).catch(error => {
                  console.error('Error generating image:', error);
                  alert('Failed to generate image. Check console for details.');
+                 
+                 // Pastikan style dikembalikan meski error
+                 targetElement.style.padding = originalStyle.padding;
+                 targetElement.style.margin = originalStyle.margin;
             });
         }
 
@@ -440,7 +463,7 @@
             doc.save(`invoice-${invoice.number}.pdf`);
         }
 
-        // FUNGSI DOWNLOAD GAMBAR SAVED INVOICE
+        // FUNGSI DOWNLOAD GAMBAR SAVED INVOICE DENGAN PERBAIKAN POTONGAN
         function downloadSavedInvoiceImage(id) {
             const saved = JSON.parse(localStorage.getItem('savedInvoices') || '[]');
             const invoice = saved.find(i => i.id === id);
@@ -455,6 +478,12 @@
             const currentCustomerName = customerNameInput.value;
             const originalAdminFee = adminFeeInput.value;
 
+            // Dapatkan elemen target dan simpan style aslinya
+            const targetElement = receiptContent;
+            const originalStyle = {
+                padding: targetElement.style.padding,
+                margin: targetElement.style.margin,
+            };
 
             // Load faktur yang disimpan ke DOM sementara
             items = invoice.items;
@@ -465,13 +494,22 @@
             renderItems();
             calculateTotals();
             
+            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
+            targetElement.style.padding = '50px'; 
+            targetElement.style.margin = '0 auto'; 
+            
+
             // Konversi ke gambar
             html2canvas(receiptContent, { 
-                scale: 2, 
+                scale: 3, // PENTING: Naikkan skala untuk kualitas HD
                 useCORS: true 
             }).then(canvas => {
                 const image = canvas.toDataURL('image/png');
                 
+                // Kembalikan style asli
+                targetElement.style.padding = originalStyle.padding;
+                targetElement.style.margin = originalStyle.margin;
+
                 // Reset state DOM ke faktur yang sedang diedit
                 items = currentItems;
                 customerNameInput.value = currentCustomerName;
@@ -491,6 +529,20 @@
                 document.body.removeChild(link);
 
                 alert('Saved invoice image downloaded successfully!');
+            }).catch(error => {
+                 console.error('Error generating saved image:', error);
+                 alert('Failed to generate saved image. Check console for details.');
+                 
+                 // Pastikan style dikembalikan & data direset meskipun error
+                 targetElement.style.padding = originalStyle.padding;
+                 targetElement.style.margin = originalStyle.margin;
+                 
+                 items = currentItems;
+                 customerNameInput.value = currentCustomerName;
+                 displayCustomerName.textContent = currentCustomerName || 'Customer Name';
+                 adminFeeInput.value = originalAdminFee;
+                 renderItems();
+                 calculateTotals();
             });
         }
         // END FUNGSI DOWNLOAD GAMBAR SAVED INVOICE
