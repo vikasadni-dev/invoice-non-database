@@ -1,14 +1,14 @@
         // Initialize jsPDF
         const { jsPDF } = window.jspdf;
         
-        // DOM Elements
+// DOM Elements
         const itemNameInput = document.getElementById('itemName');
         const itemQuantityInput = document.getElementById('itemQuantity');
         const itemPriceInput = document.getElementById('itemPrice');
         const addItemBtn = document.getElementById('addItemBtn');
         const invoiceItems = document.getElementById('invoiceItems');
         const subtotalElement = document.getElementById('subtotal');
-        const taxElement = document.getElementById('tax');
+        // const taxElement = document.getElementById('tax'); // Elemen ini tidak ada di HTML Anda
         const totalElement = document.getElementById('total');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const printBtn = document.getElementById('printBtn');
@@ -18,6 +18,11 @@
         const invoiceDate = document.getElementById('invoiceDate');
         const invoiceNumber = document.getElementById('invoiceNumber');
         const savedInvoices = document.getElementById('savedInvoices');
+        
+        // **START: Tambahan untuk Biaya Admin**
+        const adminFeeInput = document.getElementById('adminFee');
+        const adminFeeDisplay = document.getElementById('adminFeeDisplay');
+        // **END: Tambahan untuk Biaya Admin**
 
         // Variables
         let items = [];
@@ -45,6 +50,10 @@
         printBtn.addEventListener('click', printInvoice);
         saveCloudBtn.addEventListener('click', saveToCloud);
         customerNameInput.addEventListener('input', updateCustomerName);
+        
+        // **START: Tambahan Biaya Admin Event**
+        adminFeeInput.addEventListener('input', calculateTotals);
+        // **END: Tambahan Biaya Admin Event**
 
         // Functions
         function updateInvoiceDate() {
@@ -142,14 +151,17 @@
             calculateTotals();
         }
 
-        function calculateTotals() {
+function calculateTotals() {
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
-
+            
+            // **START: Perhitungan Biaya Admin**
+            const adminFee = parseInt(adminFeeInput.value) || 0;
+            const total = subtotal + adminFee; // Total sekarang hanya Subtotal + Biaya Admin
+            
             subtotalElement.textContent = formatCurrency(subtotal);
-            taxElement.textContent = formatCurrency(tax);
+            adminFeeDisplay.textContent = formatCurrency(adminFee); // Menampilkan Biaya Admin
             totalElement.textContent = formatCurrency(total);
+            // **END: Perhitungan Biaya Admin**
         }
 
         function formatCurrency(amount) {
@@ -164,6 +176,7 @@
 
             const doc = new jsPDF();
             
+            // ... (Kode untuk Title dan Invoice Info tetap sama) ...
             // Add title
             doc.setFontSize(20);
             doc.text('INVOICE', 105, 20, { align: 'center' });
@@ -188,13 +201,15 @@
             
             // Calculate totals
             const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            // **START: Perubahan PDF Biaya Admin**
+            const adminFee = parseInt(adminFeeInput.value) || 0; 
+            const total = subtotal + adminFee;
             
             // Add summary rows
             rows.push(["", "", "", "Subtotal:", formatCurrency(subtotal)]);
-            rows.push(["", "", "", "Tax (10%):", formatCurrency(tax)]);
+            rows.push(["", "", "", "Biaya Admin:", formatCurrency(adminFee)]); // Tambah baris Biaya Admin
             rows.push(["", "", "", "Total:", formatCurrency(total)]);
+            // **END: Perubahan PDF Biaya Admin**
             
             // Add the table
             doc.autoTable({
@@ -236,15 +251,21 @@
 
             const customerName = customerNameInput.value || 'Customer Name';
             const date = new Date().toLocaleDateString();
-            const total = items.reduce((sum, item) => sum + item.total, 0) * 1.1; // Include tax
             
+            // **START: Perubahan Save To Cloud Biaya Admin**
+            const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+            const adminFee = parseInt(adminFeeInput.value) || 0;
+            const total = subtotal + adminFee; // Total sekarang Subtotal + Biaya Admin
+            // **END: Perubahan Save To Cloud Biaya Admin**
+
             const invoiceData = {
                 id: Date.now(),
                 number: invoiceCounter,
                 customerName,
                 date,
                 total,
-                items: [...items]
+                items: [...items],
+                adminFee: adminFee // Simpan biaya admin
             };
             
             // Save to localStorage (simulating cloud save)
@@ -257,9 +278,12 @@
             localStorage.setItem('invoiceCounter', invoiceCounter);
             updateInvoiceDate();
             
-            // Clear current invoice
+            // Clear current invoice and admin fee input
             items = [];
             renderItems();
+            // **START: Clear Biaya Admin**
+            adminFeeInput.value = '';
+            // **END: Clear Biaya Admin**
             calculateTotals();
             customerNameInput.value = '';
             displayCustomerName.textContent = 'Customer Name';
@@ -382,12 +406,14 @@
             
             // Add summary rows
             const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            // **START: Perubahan Download PDF Biaya Admin**
+            const adminFee = invoice.adminFee || 0; // Ambil biaya admin yang tersimpan
+            const total = subtotal + adminFee;
             
             rows.push(["", "", "", "Subtotal:", formatCurrency(subtotal)]);
-            rows.push(["", "", "", "Tax (10%):", formatCurrency(tax)]);
+            rows.push(["", "", "", "Biaya Admin:", formatCurrency(adminFee)]); // Tambah baris Biaya Admin
             rows.push(["", "", "", "Total:", formatCurrency(total)]);
+            // **END: Perubahan Download PDF Biaya Admin**
             
             // Add the table
             doc.autoTable({

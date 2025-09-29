@@ -30,7 +30,13 @@
       .dark .bg-gray-100 {
         background-color: #374151;
       }
-
+      /* New rule for dark mode input text color */
+      .dark input[type="text"],
+      .dark input[type="number"] {
+        color: #1f2937; /* Use a dark color for text input */
+        background-color: #f9fafb; /* Lighter background for better contrast */
+      }
+      
       @media print {
         .no-print {
           display: none !important;
@@ -278,3 +284,4 @@
     <script src="script.js"></script>
   </body>
 </html>
+
