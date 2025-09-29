@@ -15,7 +15,7 @@
         const saveCloudBtn = document.getElementById('saveCloudBtn');
         // START: Tambahan untuk Gambar/JPG
         const generateJpgBtn = document.getElementById('generateJpgBtn');
-        const receiptContent = document.getElementById('receiptContent');
+        const receiptContent = document.getElementById('receiptContent'); // Target untuk html2canvas
         // END: Tambahan untuk Gambar/JPG
         const customerNameInput = document.getElementById('customerName');
         const displayCustomerName = document.getElementById('displayCustomerName');
@@ -251,7 +251,7 @@
                 return;
             }
 
-            // Gunakan html2canvas pada area faktur
+            // Gunakan html2canvas pada area faktur (receiptContent)
             html2canvas(receiptContent, { 
                 scale: 2, // Meningkatkan kualitas gambar
                 useCORS: true 
