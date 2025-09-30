@@ -171,70 +171,56 @@
         }
 
         // FUNGSI DOWNLOAD GAMBAR (PNG)
-        function generateJpg() {
-            if (items.length === 0) {
-                alert('Please add at least one item to generate the invoice image');
-                return;
-            }
+function generateJpg() {
+    if (items.length === 0) {
+        alert('Please add at least one item to generate the invoice image');
+        return;
+    }
 
-            const targetElement = receiptContent;
-            
-            // Simpan style asli
-            const originalStyle = {
-                padding: targetElement.style.padding,
-                margin: targetElement.style.margin,
-            };
+    const targetElement = receiptContent;
 
-            // Terapkan style sementara untuk memastikan render penuh dan tidak terpotong
-            targetElement.style.padding = '50px'; 
-            targetElement.style.margin = '0 auto'; 
+    // Simpan style asli
+    const originalStyle = {
+        padding: targetElement.style.padding,
+        margin: targetElement.style.margin,
+    };
 
-            // Perbaikan untuk Dark Mode/Teks Putih: 
-            // html2canvas sering gagal menangkap warna teks yang dipengaruhi oleh Dark Mode.
-            // Solusi: Ganti warna teks body menjadi hitam saat mengambil gambar.
-            const originalBodyColor = document.body.style.color;
-            if (document.documentElement.classList.contains('dark')) {
-                document.body.style.color = '#000000'; // Set teks menjadi hitam sementara
-            }
+    targetElement.style.padding = '20px';
+    targetElement.style.margin = '0 auto';
 
-            html2canvas(targetElement, { 
-                scale: 3, // Meningkatkan skala ke 3 untuk kualitas HD
-                useCORS: true, 
-                logging: false,
-                allowTaint: true
-            }).then(canvas => {
-                
-                // Kembalikan style asli segera setelah canvas dibuat
-                targetElement.style.padding = originalStyle.padding;
-                targetElement.style.margin = originalStyle.margin;
-                
-                // Kembalikan warna teks body
-                document.body.style.color = originalBodyColor;
+    const originalBodyColor = document.body.style.color;
+    if (document.documentElement.classList.contains('dark')) {
+        document.body.style.color = '#000000';
+    }
 
-                // Konversi canvas ke data URL (PNG)
-                const image = canvas.toDataURL('image/png');
-                
-                // Buat elemen <a> sementara untuk trigger download
-                const link = document.createElement('a');
-                link.href = image;
-                link.download = `invoice-${invoiceNumber.textContent}.png`; 
-                
-                // Trigger download
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+    html2canvas(targetElement, {
+        scale: 5,               // Naikkan skala lebih tinggi
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false
+    }).then(canvas => {
+        targetElement.style.padding = originalStyle.padding;
+        targetElement.style.margin = originalStyle.margin;
+        document.body.style.color = originalBodyColor;
 
-                alert('Invoice image downloaded successfully!');
-            }).catch(error => {
-                 console.error('Error generating image:', error);
-                 alert('Failed to generate image. Check console for details.');
-                 
-                 // Pastikan style dikembalikan & warna teks body direset meski error
-                 targetElement.style.padding = originalStyle.padding;
-                 targetElement.style.margin = originalStyle.margin;
-                 document.body.style.color = originalBodyColor;
-            });
-        }
+        // Konversi ke Blob agar kualitas lebih bagus
+        canvas.toBlob(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `invoice-${invoiceNumber.textContent}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }, 'image/png', 1.0); // kualitas PNG maksimum
+    }).catch(error => {
+        console.error('Error generating image:', error);
+        alert('Failed to generate image. Check console for details.');
+        targetElement.style.padding = originalStyle.padding;
+        targetElement.style.margin = originalStyle.margin;
+        document.body.style.color = originalBodyColor;
+    });
+}
 
 
         // FUNGSI DOWNLOAD PDF

@@ -42,6 +42,23 @@
       .receipt-container {
         min-height: 50vh;
       }
+
+      /* Batas lebar invoice agar sesuai printer struk (6cm) */
+  #receiptContent {
+    max-width: 300px; /* sekitar 6cm pada 300dpi */
+    margin: 0 auto;
+    font-size: 12px; /* lebih kecil agar muat */
+    font-family: Arial, sans-serif; /* font jelas di printer thermal */
+  }
+
+  @media print {
+    #receiptContent {
+      width: 100%;
+      max-width: 300px;
+      font-size: 11px;
+    }
+  }
+  
     </style>
   </head>
   <body class="bg-gray-100">
