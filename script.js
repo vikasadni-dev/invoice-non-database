@@ -36,11 +36,30 @@
         loadSavedInvoices();
 
         // Dark mode toggle
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-        });
+const themeToggle = document.getElementById('themeToggle');
+
+themeToggle.addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.toggle('dark');
+    const isDark = html.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark);
+
+    // Update icon tombol
+    themeToggle.querySelector('span:first-child').classList.toggle('hidden', isDark);
+    themeToggle.querySelector('span:last-child').classList.toggle('hidden', !isDark);
+});
+
+// Jalankan saat load halaman
+if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.classList.add('dark');
+    themeToggle.querySelector('span:first-child').classList.add('hidden'); // 🌙 disembunyikan
+    themeToggle.querySelector('span:last-child').classList.remove('hidden'); // ☀️ tampil
+} else {
+    document.documentElement.classList.remove('dark');
+    themeToggle.querySelector('span:first-child').classList.remove('hidden'); // 🌙 tampil
+    themeToggle.querySelector('span:last-child').classList.add('hidden'); // ☀️ sembunyi
+}
+
 
         // Check for saved theme preference
         if (localStorage.getItem('darkMode') === 'true') {

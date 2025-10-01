@@ -8,7 +8,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    
+    <script>
+  // Pastikan tema ter-apply sebelum render halaman
+  if (localStorage.getItem("darkMode") === "true") {
+    document.documentElement.classList.add("dark");
+  }
+</script>
+
+
+
     <style>
       /* ... (CSS Anda yang sudah ada) ... */
 
@@ -17,6 +25,31 @@
         color: #f9fafb;
       }
       /* ... (lanjutan CSS dark mode) ... */
+      /* DARK MODE FIX */
+.dark body {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.dark input[type="text"],
+.dark input[type="number"] {
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+.dark table {
+  background-color: #374151; /* bg-gray-700 */
+  color: #f9fafb;
+}
+
+.dark th {
+  background-color: #111827; /* bg-gray-900 */
+  color: #f9fafb;
+}
+
+.dark td {
+  border-color: #4b5563; /* gray-600 */
+}
 
       /* Perbaiki issue font input di dark mode */
       .dark input[type="text"],
