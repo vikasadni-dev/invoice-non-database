@@ -19,20 +19,15 @@
   <style>
     /* Ukuran invoice supaya pas printer struk 6cm */
     #receiptContent {
-      max-width: 300px;
+      max-width: 300px; /* ≈ 6cm @ 300dpi */
       margin: 0 auto;
       font-size: 12px;
       font-family: Arial, sans-serif;
     }
 
     @media print {
-      .no-print {
-        display: none !important;
-      }
-      body {
-        padding: 0;
-        margin: 0;
-      }
+      .no-print { display: none !important; }
+      body { padding: 0; margin: 0; }
       #receiptContent {
         width: 100%;
         max-width: 300px;
@@ -40,36 +35,18 @@
       }
     }
 
-    /* Tambahan tema dark manual */
-    .dark body {
-      background-color: #1f2937; /* gray-800 */
-      color: #f9fafb;
-    }
-    .dark .card {
-      background-color: #374151; /* gray-700 */
-      color: #f9fafb;
-    }
-    .dark input, 
-    .dark select, 
-    .dark textarea {
+    /* Tema Dark */
+    .dark body { background-color: #1f2937; color: #f9fafb; }
+    .dark .card { background-color: #374151; color: #f9fafb; }
+    .dark input, .dark select, .dark textarea {
       background-color: #1f2937;
       color: #f9fafb;
       border-color: #4b5563;
     }
-    .dark table {
-      background-color: #1f2937;
-      color: #f9fafb;
-    }
-    .dark th {
-      background-color: #111827;
-      color: #f9fafb;
-    }
-    .dark td {
-      border-color: #4b5563;
-    }
-    .dark .btn {
-      color: #f9fafb;
-    }
+    .dark table { background-color: #1f2937; color: #f9fafb; }
+    .dark th { background-color: #111827; color: #f9fafb; }
+    .dark td { border-color: #4b5563; }
+    .dark .btn { color: #f9fafb; }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -79,10 +56,8 @@
         Invoice Generator by Vika Sadni
       </h1>
       <p class="text-gray-600 dark:text-gray-300">Create professional invoices easily</p>
-      <button
-        id="themeToggle"
-        class="absolute right-4 top-0 p-2 rounded-full bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 transition"
-      >
+      <button id="themeToggle"
+        class="absolute right-4 top-0 p-2 rounded-full bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 transition">
         <span class="light-icon">🌙</span>
         <span class="dark-icon hidden">☀️</span>
       </button>
